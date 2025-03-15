@@ -13,6 +13,7 @@ import pandas as pd
 st.set_page_config(
     page_title="SLVM - INVITATIONAL",
     page_icon=":golf:", 
+    layout="wide"
 )
 
 
@@ -50,6 +51,7 @@ def initialize_data(conn):
             nom TEXT,
             handicap_1 REAL,
             handicap_actual REAL,
+            handicap_joc INTEGER,
             imatge BLOB
         )
         """
@@ -68,16 +70,16 @@ def initialize_data(conn):
     cursor.execute(
         """
         INSERT INTO jugadors
-            (nom, handicap_1, handicap_actual, imatge)
+            (nom, handicap_1, handicap_actual, handicap_joc, imatge)
         VALUES
-            ("Carlos Villaseca", 12.1, 12.1, ?),
-            ("Pol Soler", 21.7, 21.7, ?),
-            ("Ramon Miret", 25.5, 25.5, ?),
-            ("Pep Luis", 7.9, 7.1, ?),
-            ("Toni Luis", 17.9, 17.6, ?),
-            ("Jordi Soler", 26.5, 26.5, ?),
-            ("Oriol Luis", 1.0, 1.0, ?),
-            ("Alex Miret", 42.0, 42.0, ?)
+            ("Carlos Villaseca", 12.1, 12.0, 12, ?),
+            ("Pol Soler", 21.7, 21.7, 24, ?),
+            ("Ramon Miret", 25.5, 25.5, 28, ?),
+            ("Pep Luis", 7.9, 7.1, 6, ?),
+            ("Toni Luis", 17.9, 17.6, 19, ?),
+            ("Jordi Soler", 26.5, 26.5, 29, ?),
+            ("Oriol Luis", 1.0, 1.0, -1, ?),
+            ("Alex Miret", 42.0, 42.0, 38, ?)
         """, (carlos, pol, ramon, pep, toni, jordi, uri, alex)
     )
 
@@ -125,6 +127,7 @@ def load_data_jugadors(conn):
             "nom",
             "handicap_1",
             "handicap_actual",
+            "handicap_joc",
             "imatge"
         ],
     )
@@ -241,10 +244,21 @@ tabs = st.tabs(["Jugadors", "Classificació i Estadístiques", "Recull de tots e
 # --------------------------------------------------
 with tabs[0]:
     jugadors = load_data_jugadors(conn)
+    columns = st.columns([1, 1])
     for index, row in jugadors.iterrows():
-        st.write(row["nom"])
-        st.image(row["imatge"], caption=' ', use_container_width=True)
-        st.write("Handicap actual: ", row["handicap_1"])
+        id_column = index%2
+        with columns[id_column]:
+            st.markdown(f"#### **{row['nom']}**")
+            col1, col2 = st.columns([1, 3]) 
+
+            with col1:
+                st.image(row["imatge"], caption='', use_container_width=True)
+
+            with col2:
+                st.write(f"Handicap 01/01/2025: {row['handicap_1']}")
+                st.write(f"Handicap actual: {row['handicap_actual']}")
+                st.write(f"Handicap de joc: {row['handicap_joc']}")
+
         st.markdown("---")
 # --------------------------------------------------
 with tabs[1]:

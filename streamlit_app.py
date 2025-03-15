@@ -235,25 +235,15 @@ def image_to_blob(image_path):
     with open(image_path, 'rb') as file:
         return file.read()
 
-# Ruta de la imagen que deseas almacenar
-from io import BytesIO
-from PIL import Image
-image_path = '/workspaces/slvm-invitational/carlosvillaseca.jpg'  # Cambia esta ruta por la de tu imagen
-image_blob = image_to_blob(image_path)
 
-# Convertir el BLOB en una imagen usando BytesIO y PIL
-image = Image.open(BytesIO(image_blob))
-
-# Mostrar la imagen en la aplicación de Streamlit
-st.image(image, caption=' ', use_container_width=True)
 tabs = st.tabs(["Jugadors", "Classificació i Estadístiques", "Recull de tots els resultats"])
 
 # --------------------------------------------------
 with tabs[0]:
     jugadors = load_data_jugadors(conn)
     for index, row in jugadors.iterrows():
-        st.image(row["imatge"], caption=' ', use_container_width=True)
         st.write(row["nom"])
+        st.image(row["imatge"], caption=' ', use_container_width=True)
         st.write("Handicap actual: ", row["handicap_1"])
         st.markdown("---")
 # --------------------------------------------------

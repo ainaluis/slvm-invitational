@@ -1,6 +1,8 @@
 from collections import defaultdict
 from pathlib import Path
 import sqlite3
+from io import BytesIO
+from PIL import Image
 
 import streamlit as st
 import altair as alt
@@ -29,6 +31,13 @@ def connect_db():
 
     return conn, db_was_just_created
 
+def obtain_image_object_from_path(path):
+    with open(path, 'rb') as file:
+        return file.read()
+
+def obtain_image_from_image_object(image_object):
+    return Image.open(BytesIO(image_blob))
+
 
 def initialize_data(conn):
     """Initializes the results table with some data."""
@@ -39,26 +48,37 @@ def initialize_data(conn):
         CREATE TABLE IF NOT EXISTS jugadors (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nom TEXT,
-            handicap_1 FLOAT,
-            handicap_actual FLOAT,
+            handicap_1 REAL,
+            handicap_actual REAL,
+            imatge BLOB
         )
         """
     )
 
+    carlos = obtain_image_object_from_path("/workspaces/slvm-invitational/carlosvillaseca.jpg")
+    pol = obtain_image_object_from_path("/workspaces/slvm-invitational/polsoler.png")
+    uri = obtain_image_object_from_path("/workspaces/slvm-invitational/oriolluis.jpg")
+    pep = obtain_image_object_from_path("/workspaces/slvm-invitational/pepluis.jpeg")
+    toni = obtain_image_object_from_path("/workspaces/slvm-invitational/toniluis.jpg")
+    ramon = obtain_image_object_from_path("/workspaces/slvm-invitational/ramonmiret.jpg")
+    jordi = obtain_image_object_from_path("/workspaces/slvm-invitational/jordisoler.png")
+    alex = obtain_image_object_from_path("/workspaces/slvm-invitational/alexmiret.png")
+
+
     cursor.execute(
         """
         INSERT INTO jugadors
-            (nom, handicap_1, handicap_actual)
+            (nom, handicap_1, handicap_actual, imatge)
         VALUES
-            ("Carlos Villaseca", 12.1, 12.1),
-            ("Pol Soler", 21.7, 21.7),
-            ("Ramon Miret", 25.5, 25.5),
-            ("Pep Luis", 7.9, 7.1),
-            ("Toni Luis", 17.9, 17.6),
-            ("Jordi Soler", 26.5, 26.5),
-            ("Oriol Luis", 1.0, 1.0),
-            ("Alex Miret", 42.0, 42.0)
-            """
+            ("Carlos Villaseca", 12.1, 12.1, ?),
+            ("Pol Soler", 21.7, 21.7, ?),
+            ("Ramon Miret", 25.5, 25.5, ?),
+            ("Pep Luis", 7.9, 7.1, ?),
+            ("Toni Luis", 17.9, 17.6, ?),
+            ("Jordi Soler", 26.5, 26.5, ?),
+            ("Oriol Luis", 1.0, 1.0, ?),
+            ("Alex Miret", 42.0, 42.0, ?)
+        """, (carlos, pol, ramon, pep, toni, jordi, uri, alex)
     )
 
     cursor.execute(
@@ -88,8 +108,29 @@ def initialize_data(conn):
     )
     conn.commit()
 
+def load_data_jugadors(conn):
+    """Loads the players data from the database."""
+    cursor = conn.cursor()
 
-def load_data(conn):
+    try:
+        cursor.execute("SELECT * FROM jugadors")
+        data = cursor.fetchall()
+    except:
+        return None
+
+    df = pd.DataFrame(
+        data,
+        columns=[
+            "id",
+            "nom",
+            "handicap_1",
+            "handicap_actual",
+            "imatge"
+        ],
+    )
+    return df
+
+def load_data_results(conn):
     """Loads the results data from the database."""
     cursor = conn.cursor()
 
@@ -181,13 +222,40 @@ def update_data(conn, df, changes):
 **Benvinguts a la web oficial de la lliga SLVM - Invitational!**
 
 """
+# Connect to database and create table if needed
+conn, db_was_just_created = connect_db()
 
+# Initialize data.
+if db_was_just_created:
+    initialize_data(conn)
+    st.toast("Database initialized with some sample data.")
+
+
+def image_to_blob(image_path):
+    with open(image_path, 'rb') as file:
+        return file.read()
+
+# Ruta de la imagen que deseas almacenar
+from io import BytesIO
+from PIL import Image
+image_path = '/workspaces/slvm-invitational/carlosvillaseca.jpg'  # Cambia esta ruta por la de tu imagen
+image_blob = image_to_blob(image_path)
+
+# Convertir el BLOB en una imagen usando BytesIO y PIL
+image = Image.open(BytesIO(image_blob))
+
+# Mostrar la imagen en la aplicación de Streamlit
+st.image(image, caption=' ', use_container_width=True)
 tabs = st.tabs(["Jugadors", "Classificació i Estadístiques", "Recull de tots els resultats"])
 
 # --------------------------------------------------
 with tabs[0]:
-    st.write("Hola")
-
+    jugadors = load_data_jugadors(conn)
+    for index, row in jugadors.iterrows():
+        st.image(row["imatge"], caption=' ', use_container_width=True)
+        st.write(row["nom"])
+        st.write("Handicap actual: ", row["handicap_1"])
+        st.markdown("---")
 # --------------------------------------------------
 with tabs[1]:
     st.write("Estaístiques")
@@ -211,16 +279,8 @@ with tabs[2]:
         """
     )
 
-    # Connect to database and create table if needed
-    conn, db_was_just_created = connect_db()
-
-    # Initialize data.
-    if db_was_just_created:
-        initialize_data(conn)
-        st.toast("Database initialized with some sample data.")
-
     # Load data from database
-    df = load_data(conn)
+    df = load_data_results(conn)
 
     # Display data with editable table
     edited_df = st.data_editor(

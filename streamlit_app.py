@@ -36,6 +36,33 @@ def initialize_data(conn):
 
     cursor.execute(
         """
+        CREATE TABLE IF NOT EXISTS jugadors (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nom TEXT,
+            handicap_1 FLOAT,
+            handicap_actual FLOAT,
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        INSERT INTO jugadors
+            (nom, handicap_1, handicap_actual)
+        VALUES
+            ("Carlos Villaseca", 12.1, 12.1),
+            ("Pol Soler", 21.7, 21.7),
+            ("Ramon Miret", 25.5, 25.5),
+            ("Pep Luis", 7.9, 7.1),
+            ("Toni Luis", 17.9, 17.6),
+            ("Jordi Soler", 26.5, 26.5),
+            ("Oriol Luis", 1.0, 1.0),
+            ("Alex Miret", 42.0, 42.0)
+            """
+    )
+
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS resultats (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             dia TEXT,
@@ -56,7 +83,6 @@ def initialize_data(conn):
         INSERT INTO resultats
             (dia, jugador1, punts1, jugador2, punts2, jugador3, punts3, jugador4, punts4)
         VALUES
-            -- Beverages
             ("2025-03-15", "Aina", 2, "Pep", 0, NULL, NULL, NULL, NULL)
             """
     )
@@ -146,9 +172,8 @@ def update_data(conn, df, changes):
 
 
 # -----------------------------------------------------------------------------
-# Draw the actual page, starting with the inventory table.
+# Draw the actual page.
 
-# Set the title that appears at the top of the page.
 """
 # :golf: SLVM - Invitational 🏌🏽🏌🏽‍♂️
 
@@ -156,61 +181,67 @@ def update_data(conn, df, changes):
 **Benvinguts a la web oficial de la lliga SLVM - Invitational!**
 
 """
-st.info(
-    """
-    Utilitza la taula següent per afegir, eliminar i editar els resultats.
-    No oblidis de guardar els resultats quan hagis acabat.
-    """
-)
 
-# Connect to database and create table if needed
-conn, db_was_just_created = connect_db()
+tabs = st.tabs(["Jugadors", "Classificació i Estadístiques", "Recull de tots els resultats"])
 
-# Initialize data.
-if db_was_just_created:
-    initialize_data(conn)
-    st.toast("Database initialized with some sample data.")
+# --------------------------------------------------
+with tabs[0]:
+    st.write("Hola")
 
-# Load data from database
-df = load_data(conn)
+# --------------------------------------------------
+with tabs[1]:
+    st.write("Estaístiques")
 
-# Display data with editable table
-edited_df = st.data_editor(
-    df,
-    disabled=["id"],  # Don't allow editing the 'id' column.
-    num_rows="dynamic",  # Allow appending/deleting rows.
-    column_config={
-        # Show dollar sign before price columns.
-        "dia": st.column_config.DateColumn(format="DD-MM-YYYY"),
-    },
-    key="results_table",
-)
+    ""
+    ""
+    ""
 
-has_uncommitted_changes = any(len(v) for v in st.session_state.results_table.values())
-
-st.button(
-    "Guarda els canvis",
-    type="primary",
-    disabled=not has_uncommitted_changes,
-    # Update data in database
-    on_click=update_data,
-    args=(conn, df, st.session_state.results_table),
-)
-
-
-# -----------------------------------------------------------------------------
-# Now some cool charts
-
-# Add some space
-""
-""
-""
-
-st.subheader("Resultats", divider="red")
+    st.subheader("Resultats", divider="red")
 
 
 
 
-# # -----------------------------------------------------------------------------
 
+# --------------------------------------------------
+with tabs[2]:
+    st.info(
+        """
+        Utilitza la taula següent per afegir, eliminar i editar els resultats.
+        No oblidis de guardar els resultats quan hagis acabat.
+        """
+    )
+
+    # Connect to database and create table if needed
+    conn, db_was_just_created = connect_db()
+
+    # Initialize data.
+    if db_was_just_created:
+        initialize_data(conn)
+        st.toast("Database initialized with some sample data.")
+
+    # Load data from database
+    df = load_data(conn)
+
+    # Display data with editable table
+    edited_df = st.data_editor(
+        df,
+        disabled=["id"],  # Don't allow editing the 'id' column.
+        num_rows="dynamic",  # Allow appending/deleting rows.
+        column_config={
+            # Show dollar sign before price columns.
+            "dia": st.column_config.DateColumn(format="DD-MM-YYYY"),
+        },
+        key="results_table",
+    )
+
+    has_uncommitted_changes = any(len(v) for v in st.session_state.results_table.values())
+
+    st.button(
+        "Guarda els canvis",
+        type="primary",
+        disabled=not has_uncommitted_changes,
+        # Update data in database
+        on_click=update_data,
+        args=(conn, df, st.session_state.results_table),
+    )
 

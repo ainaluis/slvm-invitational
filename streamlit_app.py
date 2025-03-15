@@ -189,7 +189,7 @@ edited_df = st.data_editor(
 has_uncommitted_changes = any(len(v) for v in st.session_state.results_table.values())
 
 st.button(
-    "Commit changes",
+    "Guarda els canvis",
     type="primary",
     disabled=not has_uncommitted_changes,
     # Update data in database

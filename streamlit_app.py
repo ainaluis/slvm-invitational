@@ -38,11 +38,11 @@ def initialize_data(conn):
         """
         CREATE TABLE IF NOT EXISTS resultats (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            dia TEXT NOT NULL,
-            jugador1 TEXT NOT NULL,
-            punts1 INTEGER NOT NULL,
-            jugador2 TEXT NOT NULL,
-            punts2 INTEGER NOT NULL,
+            dia TEXT,
+            jugador1 TEXT,
+            punts1 INTEGER,
+            jugador2 TEXT,
+            punts2 INTEGER,
             jugador3 TEXT,
             punts3 INTEGER,
             jugador4 TEXT,
@@ -54,10 +54,10 @@ def initialize_data(conn):
     cursor.execute(
         """
         INSERT INTO resultats
-            (id, dia, jugador1, punts1, jugador2, punts2, jugador3, punts3, jugador4, punts4)
+            (dia, jugador1, punts1, jugador2, punts2, jugador3, punts3, jugador4, punts4)
         VALUES
             -- Beverages
-            (0, "15-03-2025", "Aina", 2, "Pep", 0, NULL, NULL, NULL, NULL)
+            ("2025-03-15", "Aina", 2, "Pep", 0, NULL, NULL, NULL, NULL)
             """
     )
     conn.commit()
@@ -78,14 +78,14 @@ def load_data(conn):
         columns=[
             "id",
             "dia",
-            "jugador 1",
-            "punts 1",
-            "jugador 2",
-            "punts 2",
-            "jugador 3",
-            "punts 3",
-            "jugador 4",
-            "punts 4"
+            "jugador1",
+            "punts1",
+            "jugador2",
+            "punts2",
+            "jugador3",
+            "punts3",
+            "jugador4",
+            "punts4"
         ],
     )
 
@@ -129,9 +129,9 @@ def update_data(conn, df, changes):
         cursor.executemany(
             """
             INSERT INTO resultats
-                (id, dia, jugador1, punts1, jugador2, punts2, jugador3, punts3, jugador4, punts4)
+                (dia, jugador1, punts1, jugador2, punts2, jugador3, punts3, jugador4, punts4)
             VALUES
-                (:id, :dia, :jugador1, :punts1, :jugador2, :punts2, :jugador3, :punts3, :jugador4, :punts4)
+                (:dia, :jugador1, :punts1, :jugador2, :punts2, :jugador3, :punts3, :jugador4, :punts4)
             """,
             (defaultdict(lambda: None, row) for row in changes["added_rows"]),
         )
